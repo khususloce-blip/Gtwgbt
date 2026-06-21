@@ -1,1 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Income Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Fonts (Plus Jakarta Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4 antialiased selection:bg-emerald-500 selection:text-white">
+
+    <div class="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-6 shadow-2xl transition-all duration-300 hover:border-slate-600/50">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-8">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Target Tracker</h1>
+                <p id="motivational-quote" class="text-xs text-slate-400 mt-1 transition-all duration-500">Yuk mulai catat pendapatanmu hari ini!</p>
+            </div>
+            <div class="bg-slate-700/50 px-3 py-1.5 rounded-full border border-slate-600/30 text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Sync
+            </div>
+        </div>
+
+        <!-- Main Display: Current Income & Progress -->
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-5 mb-6 relative overflow-hidden group">
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Pendapatan Saat Ini</p>
+            <div class="flex items-baseline gap-1 mt-1">
+                <span class="text-3xl font-black text-white transition-all duration-300" id="income-display">Rp 0</span>
+            </div>
+
+            <!-- Progress Bar Info -->
+            <div class="flex justify-between items-center mt-6 mb-2 text-xs font-medium text-slate-400">
+                <span id="progress-percentage">Progres: 0%</span>
+                <span id="limit-info-display">Limit Target: Rp 10.000.000</span>
+            </div>
+            
+            <!-- Progress Bar Track -->
+            <div class="w-full h-3 bg-slate-700 rounded-full overflow-hidden p-[2px]">
+                <div id="progress-bar" class="h-full w-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)"></div>
+            </div>
+        </div>
+
+        <!-- Limit Configuration Section -->
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 mb-6">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Atur Limit Target</label>
+            <div class="flex gap-2">
+                <input type="number" id="limit-input" value="10000000" class="flex-1 bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors" placeholder="Masukkan limit baru...">
+                <button onclick="updateLimit()" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-xs font-semibold px-4 py-2 rounded-xl border border-slate-600 transition-all">
+                    Update
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Actions (+ / -) -->
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nominal Transaksi</label>
+                <input type="number" id="amount-input" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600" placeholder="Contoh: 500000" min="0">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="adjustIncome('plus')" class="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Tambah
+                </button>
+                <button onclick="adjustIncome('minus')" class="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 active:scale-[0.98] border border-slate-600 text-rose-400 font-bold py-3 px-4 rounded-xl transition-all duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                    </svg>
+                    Kurang
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert Notification (Hidden by default) -->
+        <div id="alert-box" class="mt-4 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl flex items-center gap-2 hidden animate-fadeIn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 shrink-0">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            </svg>
+            <span id="alert-message">Pendapatan sudah melewati limit target!</span>
+        </div>
+
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        // State data aplikasi
+        let currentIncome = 0;
+        let currentLimit = 10000000;
+
+        // Kumpulan quote dinamis biar web terasa "hidup"
+        const quotes = {
+            start: ["Yuk, isi pundi-pundi rupiahmu!", "Sedikit demi sedikit lama-lama jadi bukit."],
+            half: ["Wih, udah setengah jalan nih! Keren!", "Setengah jalan terlampaui, gas terus!"],
+            done: ["TARGET TERCAPAI! Kamu hebat luar biasa! 🎉", "Luar biasa, semua target disapu bersih!"],
+            over: ["Wah, dompetmu sampai luber melewati limit! 💰🚀", "Limit terlewati! Saatnya set target baru yang lebih tinggi?"]
+        };
+
+        // Format angka ke Rupiah yang rapi
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+            }).format(angka);
+        }
+
+        // Fungsi Update UI secara menyeluruh
+        function updateUI() {
+            const incomeDisplay = document.getElementById('income-display');
+            const limitInfoDisplay = document.getElementById('limit-info-display');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercentage = document.getElementById('progress-percentage');
+            const quoteDisplay = document.getElementById('motivational-quote');
+            const alertBox = document.getElementById('alert-box');
+
+            // 1. Update Teks Angka
+            incomeDisplay.innerText = formatRupiah(currentIncome);
+            limitInfoDisplay.innerText = `Limit Target: ${formatRupiah(currentLimit)}`;
+
+            // 2. Hitung Persentase Progres
+            let percentage = currentLimit > 0 ? Math.round((currentIncome / currentLimit) * 100) : 0;
+            progressPercentage.innerText = `Progres: ${percentage}%`;
+
+            // 3. Batasi lebar progress bar maksimal 100% untuk visual saja
+            const barWidth = Math.min(percentage, 100);
+            progressBar.style.width = `${barWidth}%`;
+
+            // 4. Perubahan Warna Dinamis pada Progress Bar & Quotes (Biar Hidup)
+            if (percentage === 0) {
+                progressBar.className = "h-full bg-slate-600 rounded-full transition-all duration-500";
+                quoteDisplay.innerText = quotes.start[0];
+                alertBox.classList.add('hidden');
+            } else if (percentage < 50) {
+                progressBar.className = "h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500";
+                quoteDisplay.innerText = quotes.start[1];
+                alertBox.classList.add('hidden');
+            } else if (percentage >= 50 && percentage < 100) {
+                progressBar.className = "h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500";
+                quoteDisplay.innerText = quotes.half[Math.floor(Math.random() * quotes.half.length)];
+                alertBox.classList.add('hidden');
+            } else if (percentage === 100) {
+                progressBar.className = "h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500";
+                quoteDisplay.innerText = quotes.done[0];
+                alertBox.classList.add('hidden');
+            } else {
+                // Jika melewati limit
+                progressBar.className = "h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-500 animate-pulse";
+                quoteDisplay.innerText = quotes.over[0];
+                alertBox.classList.remove('hidden');
+            }
+        }
+
+        // Fungsi Tambah / Kurang Pendapatan
+        function adjustIncome(type) {
+            const amountInput = document.getElementById('amount-input');
+            const value = parseInt(amountInput.value);
+
+            if (isNaN(value) || value <= 0) {
+                alert("Masukkan nominal transaksi yang valid terlebih dahulu ya!");
+                return;
+            }
+
+            if (type === 'plus') {
+                currentIncome += value;
+            } else if (type === 'minus') {
+                // Mencegah pendapatan minus
+                currentIncome = Math.max(0, currentIncome - value);
+            }
+
+            // Reset input form & jalankan UI update
+            amountInput.value = '';
+            updateUI();
+        }
+
+        // Fungsi Perbarui Nilai Limit
+        function updateLimit() {
+            const limitInput = document.getElementById('limit-input');
+            const newLimit = parseInt(limitInput.value);
+
+            if (isNaN(newLimit) || newLimit <= 0) {
+                alert("Harap masukkan angka limit target yang valid!");
+                return;
+            }
+
+            currentLimit = newLimit;
+            updateUI();
+        }
+
+        // Render awal saat web dibuka
+        updateUI();
+    </script>
+</body>
+</html>
 
